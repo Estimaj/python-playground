@@ -1,22 +1,22 @@
 from dotenv import load_dotenv
-from langchain.llms import OpenAI
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
+from langchain.chat_models import init_chat_model
+from langchain_core.messages import HumanMessage, SystemMessage
 
 # Load API key from .env file
 load_dotenv()
 
-# Initialize OpenAI model
-llm = OpenAI(temperature=0.7)
+# Initialize chat model
+model = init_chat_model("gpt-4o-mini", model_provider="openai")
 
-# Create a prompt template
-prompt = PromptTemplate(
-    input_variables=["question"],
-    template="Answer the following question: {question}"
-)
+# Set up messages for translation
+messages = [
+    SystemMessage("Translate the following from English into Italian"),
+    HumanMessage("hi!"),
+]
 
-# Create and run a chain
-chain = LLMChain(llm=llm, prompt=prompt)
-response = chain.run("What are three benefits of using LangChain?")
+# Get response and stream tokens
+model.invoke(messages)
+for token in model.stream(messages):
+    print(token.content, end="", flush=True)
 
-print(response)
+print("\n-----")

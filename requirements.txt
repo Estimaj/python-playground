@@ -5,3 +5,4 @@ faiss-cpu
 tqdm
 python-dotenv
 requests
+langchain[openai]
