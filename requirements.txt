@@ -1,3 +1,7 @@
-requests
+langchain
+ollama
 openai
+faiss-cpu
+tqdm
 python-dotenv
+requests
