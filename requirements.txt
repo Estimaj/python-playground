@@ -6,3 +6,4 @@ tqdm
 python-dotenv
 requests
 langchain[openai]
+langchain-chroma
