@@ -49,7 +49,8 @@ from langchain_chroma import Chroma
 
 vector_store = Chroma(
     collection_name="bitcoin",
-    embedding_function=embedding_model
+    embedding_function=embedding_model,
+    # persist_directory="vector_store" # Keeps the database in the vector_store folder
 )
 
 # Save vector store
@@ -64,6 +65,56 @@ user_query = "What is Bitcoin?"
 # user_query_embedding = embedding_model.embed_query(user_query)
 
 # Search vector store
-results = vector_store.similarity_search_with_score(user_query)
+relevant_chunks = vector_store.similarity_search_with_score(
+    query=user_query,
+    k=4
+)
 
-print(results)
+# print(relevant_chunks)
+
+# Create Prompt
+relevant_chunks_str = ""
+for chunk, score in relevant_chunks:
+    relevant_chunks_str += chunk.page_content + '\n'
+
+# promptV1 = f"""
+#     User Query: 
+#     {user_query}
+
+#     Context:
+#     {relevant_chunks_str}
+
+#     Instructions:
+#     Answer the provided user query.
+#     Answer and explain like you where talking to a five year old.
+# """
+
+prompt = f"""
+    User Query: 
+    {user_query}
+
+    Context:
+    {relevant_chunks_str}
+
+    Instructions:
+    Answer the provided user query only on the context provided.
+    If you don't know the answer, say "I don't know".
+    Don't use any more knowledge than the one provided in the context.
+    Answer and explain like you where talking to a five year old.
+"""
+
+# print(prompt)
+
+# 5.1 Create LLM
+from langchain.llms import OpenAI
+
+llm = OpenAI(model="gpt-4o-mini")
+
+messages = [
+    {"role": "human", "content": prompt}
+]
+
+llm_response = llm.invoke(messages)
+
+print(llm_response)
+
