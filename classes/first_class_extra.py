@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Load Phase 1.1
-file_path = "documents/bitcoin.pdf"
+file_path = "../documents/bitcoin.pdf"
 loader = PyPDFLoader(file_path, mode="single")
 documents = loader.load()
 
@@ -43,3 +43,26 @@ print("-" * 40)
 from langchain.embeddings import OpenAIEmbeddings
 
 embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
+
+# Embeddings 3.2
+from langchain.vectorstores import FAISS
+
+# Create vector store
+vector_store = FAISS.from_documents(split_docs, embedding_model)
+
+#  Persist vector store to disk
+# vector_store.save_local("first_class_extra")
+
+query = "What is Bitcoin?"
+
+# Query vector store
+results = vector_store.similarity_search(query)
+
+print("\n=== Search Results ===")
+print("-" * 40)
+for i, doc in enumerate(results, 1):
+    print(f"Result {i}:")
+    print(f"Content: {doc.page_content}")
+    print(f"Source: Page {doc.metadata.get('page', 'Unknown')}")
+    print("-" * 40)
+print()

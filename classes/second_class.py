@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Load Phase 1.1
-file_path = "documents/bitcoin.pdf"
+file_path = "../documents/bitcoin.pdf"
 loader = PyPDFLoader(file_path, mode="single")
 documents = loader.load()
 
