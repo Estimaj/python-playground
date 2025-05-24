@@ -114,5 +114,3 @@ llm_response = llm.invoke(messages)
 print("-" * 40)
 print(llm_response)
 print("-" * 40)
-
-# TODO: send the user query to a LLM to get a better query

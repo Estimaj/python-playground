@@ -50,10 +50,10 @@ class StreamlitApp:
         user_input = st.chat_input("Type a message...")
         
         if user_input:
-            # TODO: Run the user input through the LLM to get the intent
             self._add_message(role="user", content=user_input)
 
-            assistant_response = self.rag_predict.generate_response(user_input, st.session_state.messages)
+            better_query = self.rag_predict.generate_better_query(user_input)
+            assistant_response = self.rag_predict.generate_response(better_query, st.session_state.messages)
             self._add_message(role="assistant", content=assistant_response)
 
             # Rerun to show the new messages

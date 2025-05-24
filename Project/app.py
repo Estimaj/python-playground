@@ -11,13 +11,12 @@ from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 from rag_load import RAGLoad
 from db import DocumentDatabase
+from lib.logger import setup_logging
 
-# Configure logging - this will be shared across the entire application
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Call this instead of the old basicConfig
+log_file = setup_logging()
 logger = logging.getLogger(__name__)
+logger.info(f"Logging configured. Log file: {log_file}")
 
 # Load environment variables from .env file in parent directory
 dotenv_path = os.path.join("..", ".env")
