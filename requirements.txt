@@ -9,3 +9,5 @@ langchain[openai]
 langchain-chroma
 streamlit
 beautifulsoup4
+unstructured[md]
+nltk

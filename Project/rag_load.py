@@ -4,11 +4,11 @@ RAG Service for handling predict part.
 import os
 import re
 import logging
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.document_loaders import PyPDFLoader, WebBaseLoader
+from langchain_community.document_loaders import UnstructuredMarkdownLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from db import DocumentDatabase
-from lib.rag_load_helper import filter_meaningful_content
+from lib.rag_load_helper import filter_meaningful_content, filter_notion_content
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,11 @@ class RAGLoad:
             chunk_overlap=100, # 0.15 - 0.3 only for structure data
         )
         split_docs = text_splitter.split_documents(documents)
+
+        # Add metadata
+        for doc in split_docs:
+            doc.metadata["document_type"] = "cv"
+            doc.metadata["loader"] = "pdf"
 
         self.db.add_documents(split_docs)
 
@@ -71,24 +76,75 @@ class RAGLoad:
 
     def _load_notion_documents(self):
         """Load the Notion documents."""
-        # TODO: Implement this https://python.langchain.com/docs/integrations/document_loaders/notion/
-        raise NotImplementedError("Loading Notion documents is not implemented yet.")
+        # https://python.langchain.com/docs/integrations/document_loaders/notion/
+
+        files = [
+            "./data/notion_2025.md",
+            "./data/notion_old.md",
+        ]
+        
+        all_filtered_docs = []
+        
+        for file_path in files:
+            logger.info(f"Loading Notion file: {file_path}")
+            
+            # Check if file exists
+            if not os.path.exists(file_path):
+                logger.warning(f"File not found: {file_path}, skipping...")
+                continue
+            
+            loader = UnstructuredMarkdownLoader(file_path=file_path)
+            documents = loader.load()
+
+            # Use smaller chunks for to-do lists
+            text_splitter = RecursiveCharacterTextSplitter(
+                separators=["\n\n", "\n", ".", " "],
+                chunk_size=300,
+                chunk_overlap=50,
+            )
+
+            split_docs = text_splitter.split_documents(documents)
+            
+            # Filter meaningful content (same function works for all notion files!)
+            filtered_docs = filter_notion_content(split_docs)
+            
+            # Add metadata
+            for doc in filtered_docs:
+                doc.metadata["document_type"] = "notion"
+                doc.metadata["loader"] = "markdown"
+                doc.metadata["source_file"] = file_path  # Track which file it came from
+            
+            all_filtered_docs.extend(filtered_docs)
+            logger.info(f"File {file_path}: {len(split_docs)} → {len(filtered_docs)} chunks after filtering")
+        
+        # Add all filtered documents to database
+        if all_filtered_docs:
+            self.db.add_documents(all_filtered_docs)
+            logger.info(f"Total Notion documents added: {len(all_filtered_docs)}")
+        else:
+            logger.warning("No Notion documents were loaded")
     
     def load_documents(self):
         """
         Load the documents from the database.
         """
-        # try:
-        #     self._load_cv_documents()
-        # except Exception as e:
-        #     logger.error(f"Error loading documents from cv: {e}")
-        #     raise e
+        try:
+            self._load_cv_documents()
+        except Exception as e:
+            logger.error(f"Error loading documents from cv: {e}")
+            raise e
 
-        # try:
-        #     self._load_website_documents()
-        # except Exception as e:
-        #     logger.error(f"Error loading documents from website: {e}")
-        #     raise e
+        try:
+            self._load_website_documents()
+        except Exception as e:
+            logger.error(f"Error loading documents from website: {e}")
+            raise e
+
+        try:
+            self._load_notion_documents()
+        except Exception as e:
+            logger.error(f"Error loading documents from notion: {e}")
+            raise e
 
         info = self.db.get_collection_info()
         logger.info(f"Database seeded successfully. Collection info: {info}")
