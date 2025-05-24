@@ -89,18 +89,23 @@ for chunk, score in relevant_chunks:
 #     Answer and explain like you where talking to a five year old.
 # """
 
+chat_history = ""
+
 prompt = f"""
+    Instructions:
+    Answer the provided user query only on the context provided.
+    If you don't know the answer, say "I don't know".
+    Don't use any more knowledge than the one provided in the context.
+    Answer and explain like you where talking to a five year old.
+
     User Query: 
     {user_query}
 
     Context:
     {relevant_chunks_str}
 
-    Instructions:
-    Answer the provided user query only on the context provided.
-    If you don't know the answer, say "I don't know".
-    Don't use any more knowledge than the one provided in the context.
-    Answer and explain like you where talking to a five year old.
+    chat_history:
+    {chat_history}
 """
 
 # print(prompt)
