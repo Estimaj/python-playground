@@ -9,6 +9,7 @@ import argparse
 import subprocess
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
+from db import DocumentDatabase
 
 # Configure logging - this will be shared across the entire application
 logging.basicConfig(
@@ -40,10 +41,20 @@ def seed_database() -> int:
     try:
         logger.info("Seeding database")
         # Database seeding logic here
-        return 0
+        db = DocumentDatabase()
+        success = db.seed_database()
+
+        if success:
+            info = db.get_collection_info()
+            logger.info(f"Database seeded successfully. Collection info: {info}")
+            return 1
+        else:
+            logger.error("Database seeding failed")
+            return 0
+
     except Exception as e:
         logger.error(f"Error seeding database: {e}")
-        return 1
+        return 0
 
 def parse_arguments(args: List[str]) -> Dict[str, Any]:
     """Parse command line arguments."""
