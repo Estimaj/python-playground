@@ -5,6 +5,9 @@ from db import DocumentDatabase
 import os
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage, AIMessage
+import logging
+
+logger = logging.getLogger(__name__)
 
 class RAGPredict:
     """
@@ -62,6 +65,7 @@ class RAGPredict:
 
         # TODO: Get the context from the database
         context = self._get_context(user_query)
+        logger.info(f"Context: {context}")
         # if not self._isValidContext(context):
         #     return "I'm sorry, I don't have any information about that."
         messages.append(

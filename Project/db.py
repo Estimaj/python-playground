@@ -54,7 +54,7 @@ class DocumentDatabase:
         try:
             vectors = self.vector_store.get()
             return {
-                "document_count": len(vectors),
+                "document_count": len(vectors['ids']),
                 "collection_name": self.collection_name
             }
         except Exception as e:

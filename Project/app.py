@@ -40,16 +40,6 @@ def run_streamlit() -> int:
         logger.error(f"Error running Streamlit: {e}")
         return 1
 
-def reset_database() -> int:
-    """Reset the database."""
-    try:
-        logger.info("Resetting database")
-        DocumentDatabase().reset_collection()
-        return 1
-    except Exception as e:
-        logger.error(f"Error resetting database: {e}")
-        return 0
-
 def seed_database() -> int:
     """Seed the database."""
     try:
@@ -63,6 +53,26 @@ def seed_database() -> int:
         logger.error(f"Error seeding database: {e}")
         return 0
 
+def reset_database() -> int:
+    """Reset the database."""
+    try:
+        logger.info("Resetting database")
+        DocumentDatabase().reset_collection()
+
+        return 1
+    except Exception as e:
+        logger.error(f"Error resetting database: {e}")
+        return 0
+
+def get_database_size() -> int:
+    """Get the size of the database."""
+    try:
+        logger.info("Getting database size")
+        return DocumentDatabase().get_collection_info()
+    except Exception as e:
+        logger.error(f"Error getting database size: {e}")
+        return 0
+
 def parse_arguments(args: List[str]) -> Dict[str, Any]:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Application description here")
@@ -70,6 +80,7 @@ def parse_arguments(args: List[str]) -> Dict[str, Any]:
     # Add arguments here
     parser.add_argument("--seed", "-s", action="store_true", help="Seed the database")
     parser.add_argument("--reset", action="store_true", help="Reset the database")
+    parser.add_argument("--size", action="store_true", help="Get the size of the database")
     # parser.add_argument("--output", "-o", type=str, default="output", help="Output directory")
     
     # Parse arguments
@@ -83,6 +94,8 @@ def main() -> int:
         return seed_database()
     elif args.get('reset'):
         return reset_database()
+    elif args.get('size'):
+        return get_database_size()
     else:
         # Default behavior is to run streamlit
         return run_streamlit()

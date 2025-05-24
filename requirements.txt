@@ -8,3 +8,4 @@ requests
 langchain[openai]
 langchain-chroma
 streamlit
+beautifulsoup4
