@@ -5,6 +5,7 @@ Streamlit application for chat interface.
 import streamlit as st
 import logging
 from datetime import datetime
+from rag_predict import RAGPredict
 
 # Create logger for this module
 logger = logging.getLogger(__name__)
@@ -14,8 +15,15 @@ class StreamlitApp:
     
     def __init__(self):
         """Initialize the Streamlit app."""
+        self.rag_predict = self._setup_rag_predict()
         self._setup_page()
         self._initialize_chat_history()
+    
+    def _setup_rag_predict(self):
+        """Setup the RAG predict service."""
+        if 'rag_predict' not in st.session_state:
+            st.session_state.rag_predict = RAGPredict()
+        return st.session_state.rag_predict
     
     def _setup_page(self):
         """Configure Streamlit page settings."""
@@ -42,8 +50,10 @@ class StreamlitApp:
         user_input = st.chat_input("Type a message...")
         
         if user_input:
+            # TODO: Run the user input through the LLM to get the intent
             self._add_message(role="user", content=user_input)
-            assistant_response = "..."
+
+            assistant_response = self.rag_predict.generate_response(user_input, st.session_state.messages)
             self._add_message(role="assistant", content=assistant_response)
 
             # Rerun to show the new messages
