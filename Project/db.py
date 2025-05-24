@@ -8,6 +8,7 @@ import logging
 from typing import Dict, Any
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
+from langchain.schema import Document
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,8 @@ class DocumentDatabase:
 
     def _connect(self):
         """Connect to ChromaDB using LangChain wrapper."""
+        # Docs: https://python.langchain.com/docs/integrations/vectorstores/chroma/#setup
+        # API Ref: https://python.langchain.com/api_reference/chroma/vectorstores/langchain_chroma.vectorstores.Chroma.html#langchain_chroma.vectorstores.Chroma
         vector_store = Chroma(
             collection_name=self.collection_name,
             embedding_function=self.embeddings,
@@ -45,27 +48,6 @@ class DocumentDatabase:
         )
 
         return vector_store
-    
-    def seed_database(self) -> bool:
-        """Seed the database with initial documents."""
-        try:
-            logger.info("Starting database seeding...")
-            
-            # For now, let's add a simple test document
-            # sample_documents = [
-            #     {
-            #         "id": "doc_1",
-            #         "text": "This is a sample document for testing the RAG system.",
-            #         "metadata": {"source": "test", "type": "sample"}
-            #     }
-            # ]
-            
-            # logger.info(f"Successfully seeded database with {len(sample_documents)} documents")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error seeding database: {e}")
-            return False
     
     def get_collection_info(self) -> Dict[str, Any]:
         """Get information about the current collection."""
@@ -78,3 +60,15 @@ class DocumentDatabase:
         except Exception as e:
             logger.error(f"Error getting collection info: {e}")
             return {}
+
+    def add_documents(self, documents: list[Document]) -> list[str]:
+        """Add documents to the vector store."""
+        return self.vector_store.add_documents(documents)
+    
+    def reset_collection(self) -> None:
+        """Reset the collection."""
+        self.vector_store.reset_collection()
+
+    def get_similarity_search_with_score(self, user_query: str) -> list[tuple[Document, float]]:
+        """Get the similarity search with score."""
+        return self.vector_store.similarity_search_with_score(user_query)

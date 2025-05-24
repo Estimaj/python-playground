@@ -41,7 +41,12 @@ class RAGPredict:
                 formatted_history.append(HumanMessage(content=msg["content"]))
             elif msg["role"] == "assistant":
                 formatted_history.append(AIMessage(content=msg["content"]))
+                
         return formatted_history
+
+    def _get_context(self, user_query: str) -> str:
+        """ Get the context from the database. """
+        return self.db.get_similarity_search_with_score(user_query)
     
     def _build_prompt(self, user_query: str, chat_history: list[dict]) -> list[dict]:
         """ Build the prompt for the LLM. """
@@ -56,11 +61,13 @@ class RAGPredict:
             messages.extend(chat_history)
 
         # TODO: Get the context from the database
-        # context = self._get_context(user_query)
+        context = self._get_context(user_query)
         # if not self._isValidContext(context):
         #     return "I'm sorry, I don't have any information about that."
+        messages.append(
+            SystemMessage(content=f"Context: {context}")
+        )
         
-        # messages.append({ "role": "ai", "content": context })
         messages.append(HumanMessage(content=user_query))
 
         return messages
