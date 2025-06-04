@@ -65,32 +65,68 @@ def ingestion_phase():
 # user_query = "What is ethereum?" # AI: I don't have the provided context for that question.
 user_query = "What is bitcoin?" 
 
+# Multiple sub-queries generation
+# prompt_query_transformed = f"""
+# Given the following user query, deconstruct it into several sub-queries, based on the number of queries done.
+
+# User Query:
+# {user_query}
+
+# Return the sub-queries in a JSON format with the following structure:
+# {{
+#     "sub_queries": [
+#         "sub_query_1",
+#         "sub_query_2",
+#         "sub_query_3"
+#     ]
+# }}
+# """
+
 # Sub-queries generation
-prompt_query_transformed = f"""
-Given the following user query, deconstruct it into several sub-queries, based on the number of queries done.
-If the user is only asking about one thing, then only return one sub-query.
+# prompt_query_transformed = f"""
+# Given the following user query, deconstruct it into several sub-queries, based on the number of queries done.
+# If the user is only asking about one thing, then only return one sub-query.
 
-User Query:
-{user_query}
+# User Query:
+# {user_query}
 
-Return the sub-queries in a JSON format with the following structure:
-{{
-    "sub_queries": [
-        "sub_query_1",
-        "sub_query_2",
-        "sub_query_3"
-    ]
-}}
-"""
+# Return the sub-queries in a JSON format with the following structure:
+# {{
+#     "sub_queries": [
+#         "sub_query_1",
+#         "sub_query_2",
+#         "sub_query_3"
+#     ]
+# }}
+# """
 
-llm_json = ChatOpenAI(model="gpt-4o-mini")
-llm_json_with_format = llm_json.bind(response_format={"type": "json_object"})
-query_transformed = llm_json_with_format.invoke(prompt_query_transformed)
-query_transformed_json = json.loads(query_transformed.content)
+# llm_json = ChatOpenAI(model="gpt-4o-mini")
+# llm_json_with_format = llm_json.bind(response_format={"type": "json_object"})
+# query_transformed = llm_json_with_format.invoke(prompt_query_transformed)
+# query_transformed_json = json.loads(query_transformed.content)
 
-print("-" * 40)
-print(query_transformed_json["sub_queries"])
-print("-" * 40)
+# print("-" * 40)
+# print(query_transformed_json["sub_queries"])
+# print("-" * 40)
+
+# relevant_chunks_list = []
+# for sub_query in query_transformed_json["sub_queries"]:
+# # Search vector store
+#     relevant_chunks = vector_store.similarity_search_with_score(
+#         query=sub_query,
+#         k=2
+#     )
+#     relevant_chunks_list.extend(relevant_chunks)
+
+# prompt_hyde
+# prompt_hyde = f"""
+# Answer the following user query with a brief response.
+# Just answer the question, don't add any other information.
+
+# User Query:
+# {user_query}
+# """
+
 
 system_prompt = f"""
     You are a professional assistant in the crypto area and know a lot about bitcoin.
