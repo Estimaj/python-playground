@@ -14,7 +14,7 @@ class RAGPredict:
     """
     RAG Service for handling predict part.
     """
-    similarity_threshold = 0.7
+    similarity_threshold = 1.4
 
     def __init__(self):
         """
@@ -38,7 +38,12 @@ class RAGPredict:
 
     def _get_system_prompt(self) -> str:
         """ The main system prompt for the LLM. """
-        return "You are a helpful assistant that can answer questions about the documents in the database."
+        return """
+            You are a helpful assistant that answers questions using information from the documents in the database.
+            You should never return, quote, or copy the raw documents or their content directly, even if the user asks for it.
+            Instead, use the documents only as context to generate your own helpful, concise, and original answers.
+            If a user asks to see the documents or their content, politely explain that you cannot provide the documents themselves, but you can answer questions about them.
+        """
 
     def _format_chat_history(self, chat_history: list[dict]) -> list[dict]:
         """ Build the chat history for the LLM. """
@@ -54,7 +59,37 @@ class RAGPredict:
 
     def _get_context(self, user_query: str) -> list[tuple[Document, float]]:
         """ Get the context from the database. """
-        return self.db.get_similarity_search_with_score(user_query)
+
+        # Implement multi-query search
+        multi_query = self._get_multi_queries(user_query)
+
+        context = []
+        for query in multi_query:
+            context.extend(self.db.get_similarity_search_with_score(query))
+
+        return context
+    
+    def _get_multi_queries(self, user_query: str) -> list[str]:
+        """ Get the multi-queries from the user query. """
+        n = 3
+        system_prompt = (
+            f"You are a helpful assistant. Given the user's question, generate {n} alternative phrasings "
+            "that could help retrieve relevant information from a document database. "
+            "Return only the alternative queries, one per line."
+        )
+
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_query)
+        ]
+
+        response = self.llm.invoke(messages)
+
+        # Split the response into separate queries
+        queries = [q.strip() for q in response.content.strip().split('\n') if q.strip()]
+        
+        logger.info(f"Multi-queries: {queries}")
+        return queries
     
     def _is_valid_context(self, context: list[tuple[Document, float]]) -> bool:
         """ Check if the context is valid. """
@@ -65,8 +100,8 @@ class RAGPredict:
         
         # Second check: Is the best result good enough?
         best_score = context[0][1]  # First result should be best (lowest distance)
-        if best_score < self.similarity_threshold:
-            logger.warning(f"Best similarity score too low: {best_score:.3f} > {self.similarity_threshold}")
+        if best_score > self.similarity_threshold:
+            logger.warning(f"Best similarity score too high: {best_score:.3f} > {self.similarity_threshold}")
             return False
         
         return True
@@ -126,7 +161,10 @@ class RAGPredict:
             3. Expand abbreviations
             4. Ensure the query is clear and well-formed
             5. Keep the original intent of the query
+            6. Remove informal language like 'lol', 'lmao', etc.
         Return only the improved query without any explanations.
+
+        When you cannot improve the query, return "The original query is not provided. Please provide a specific query for improvement."
         """
 
         messages = [
@@ -135,5 +173,10 @@ class RAGPredict:
         ]
         
         response = self.llm.invoke(messages)
-        logger.info(f"User query: {user_query} -> Better query: {response.content.strip()}")
-        return response.content.strip()
+
+        content = response.content.strip()
+        if content == "The original query is not provided. Please provide a specific query for improvement.":
+            return user_query
+        
+        logger.info(f"User query: {user_query} -> Better query: {content}")
+        return content
