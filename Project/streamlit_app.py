@@ -6,8 +6,10 @@ import streamlit as st
 import logging
 from datetime import datetime
 from rag_predict import RAGPredict
+from lib.logger import setup_logging
 
 # Create logger for this module
+setup_logging()
 logger = logging.getLogger(__name__)
 
 class StreamlitApp:
@@ -75,7 +77,6 @@ class StreamlitApp:
             "timestamp": datetime.now()
         }
         st.session_state.messages.append(message)
-        logger.info(f"Added {role} message: {content}")
 
     def run(self):
         """Main application entry point."""
